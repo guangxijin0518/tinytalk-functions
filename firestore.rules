@@ -1,0 +1,33 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    match /{document=**} {
+      allow read: if request.auth != null;
+    }
+    
+    match /chats/{chat} {
+    	allow write: if request.auth != null;
+    }
+    
+    match /feedbacks/{feedback} {
+    	allow write: if request.auth != null;
+    }
+    
+    match /users/{user} {
+      allow list: if true;
+      allow write: if request.auth != null;
+      
+      function isOwner() {
+        return request.auth != null && request.auth.uid == get(/databases/$(database)/documents/users/$(user)).data.uid;
+      }
+      
+      match /contacts/{contact} {
+      	allow write: if isOwner();
+      }
+      
+      match /groups/{group} {
+      	allow write: if isOwner();
+      }
+    }
+  }
+}
